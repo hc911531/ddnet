@@ -124,6 +124,8 @@ MACRO_CONFIG_INT(ClDyncamFollowFactor, cl_dyncam_follow_factor, 60, 0, 200, CFGF
 MACRO_CONFIG_INT(ClDyncamSmoothness, cl_dyncam_smoothness, 0, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_INSENSITIVE, "Transition amount of the camera movement, 0=instant, 100=slow and smooth")
 MACRO_CONFIG_INT(ClDyncamStabilizing, cl_dyncam_stabilizing, 0, 0, 100, CFGFLAG_CLIENT | CFGFLAG_SAVE | CFGFLAG_INSENSITIVE, "Amount of camera slowdown during fast cursor movement. High value can cause delay in camera movement")
 
+MACRO_CONFIG_INT(ClMultiViewAutoExcludeFrozen, cl_multiview_auto_exclude_frozen, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatically exclude distant frozen players from multi-view")
+MACRO_CONFIG_INT(ClMultiViewAutoDeselectOnDeath, cl_multiview_auto_deselect_on_death, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatically deselect players from multi-view when they die")
 MACRO_CONFIG_INT(ClMultiViewSensitivity, cl_multiview_sensitivity, 100, 0, 200, CFGFLAG_CLIENT | CFGFLAG_INSENSITIVE, "Set how fast the camera will move to the desired location (higher = faster)")
 MACRO_CONFIG_INT(ClMultiViewZoomSmoothness, cl_multiview_zoom_smoothness, 1300, 50, 5000, CFGFLAG_CLIENT | CFGFLAG_INSENSITIVE, "Set the smoothness of the multi-view zoom (in ms, higher = slower)")
 

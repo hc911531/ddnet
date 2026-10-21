@@ -108,10 +108,12 @@ void CMultiView::ClearAll()
 
 void CMultiView::OnMessage(int MsgId, void *pRawMsg)
 {
-	if(MsgId != NETMSGTYPE_SV_KILLMSG)
+	if(MsgId != NETMSGTYPE_SV_KILLMSG || !g_Config.m_ClMultiViewAutoDeselectOnDeath)
 		return;
 
 	CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
+	if(pMsg->m_Victim < 0 || pMsg->m_Victim >= MAX_CLIENTS)
+		return;
 
 	// if we are spectating a static id set (team 0) and somebody killed, and its not a guy in solo, we remove them from the list
 	// never remove players from the list if it is a pvp server
@@ -290,12 +292,28 @@ void CMultiView::UpdateView()
 	vec2 MinPos, MaxPos;
 	float SumVel = 0.0f;
 	int AmountPlayers = 0;
+	bool HasViewedClientInTeam = false;
 
 	for(int ClientId = 0; ClientId < MAX_CLIENTS; ClientId++)
 	{
 		CViewedClient &ViewedClient = m_aViewedClients[ClientId];
+
+		// A selected client leaving must not transfer the selection to a new player reusing the same client ID.
+		if(!g_Config.m_ClMultiViewAutoDeselectOnDeath && ViewedClient.m_IsViewed && !GameClient()->m_aClients[ClientId].m_Active)
+		{
+			ViewedClient.Reset();
+		}
+
+		if(!g_Config.m_ClMultiViewAutoExcludeFrozen)
+		{
+			// Reset both parts of the freeze exclusion state so disabling the option takes effect immediately
+			// and re-enabling it starts a new freeze timer.
+			ViewedClient.m_Vanish = false;
+			ViewedClient.m_LastFreeze = 0.0f;
+		}
+
 		// look at players who are vanished
-		if(ViewedClient.m_Vanish)
+		if(g_Config.m_ClMultiViewAutoExcludeFrozen && ViewedClient.m_Vanish)
 		{
 			// not in freeze anymore and the delay is over
 			if(ViewedClient.m_LastFreeze + 6.0f <= Client()->LocalTime() && GameClient()->m_aClients[ClientId].m_FreezeEnd == 0)
@@ -317,6 +335,8 @@ void CMultiView::UpdateView()
 		if(GameClient()->m_Teams.Team(ClientId) != m_Team)
 			continue;
 
+		HasViewedClientInTeam |= ViewedClient.m_IsViewed && GameClient()->m_aClients[ClientId].m_Active;
+
 		vec2 PlayerPos;
 		if(GameClient()->m_Snap.m_aCharacters[ClientId].m_Active)
 			PlayerPos = GameClient()->m_aClients[ClientId].m_RenderPos;
@@ -326,7 +346,7 @@ void CMultiView::UpdateView()
 			continue;
 
 		// player is far away and frozen
-		if(distance(m_OldPos, PlayerPos) > 1100 && GameClient()->m_aClients[ClientId].m_FreezeEnd != 0)
+		if(g_Config.m_ClMultiViewAutoExcludeFrozen && distance(m_OldPos, PlayerPos) > 1100 && GameClient()->m_aClients[ClientId].m_FreezeEnd != 0)
 		{
 			// check if the player is frozen for more than 3 seconds, if so vanish them
 			if(ViewedClient.m_LastFreeze == 0.0f)
@@ -369,6 +389,20 @@ void CMultiView::UpdateView()
 	// if we have found no players, we disable multi view
 	if(AmountPlayers == 0)
 	{
+		if(!g_Config.m_ClMultiViewAutoDeselectOnDeath && !IsAnyViewed())
+		{
+			Reset();
+			return;
+		}
+
+		// Keep the selection and camera state while all selected players are dead. They will be included
+		// again automatically as soon as a valid character or spectator position becomes available.
+		if(!g_Config.m_ClMultiViewAutoDeselectOnDeath && HasViewedClientInTeam)
+		{
+			m_SecondChance = 0.0f;
+			return;
+		}
+
 		if(m_SecondChance == 0.0f)
 		{
 			m_SecondChance = Client()->LocalTime() + 0.3f;

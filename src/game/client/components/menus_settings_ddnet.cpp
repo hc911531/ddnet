@@ -205,6 +205,26 @@ void CMenus::RenderSettingsDDNet(CUIRect MainView)
 		}
 	}
 
+	// multi-view
+	CUIRect MultiView;
+	MainView.HSplitTop(55.0f, &MultiView, &MainView);
+	MultiView.HSplitTop(30.0f, &Label, &MultiView);
+	Ui()->DoLabel(&Label, Localize("Multi-View"), 20.0f, TEXTALIGN_ML);
+	MultiView.HSplitTop(5.0f, nullptr, &MultiView);
+	MultiView.VSplitMid(&Left, &Right, 20.0f);
+
+	Left.HSplitTop(20.0f, &Button, &Left);
+	if(DoButton_CheckBox(&g_Config.m_ClMultiViewAutoExcludeFrozen, Localize("Auto-exclude distant frozen players"), g_Config.m_ClMultiViewAutoExcludeFrozen, &Button))
+	{
+		g_Config.m_ClMultiViewAutoExcludeFrozen ^= 1;
+	}
+
+	Right.HSplitTop(20.0f, &Button, &Right);
+	if(DoButton_CheckBox(&g_Config.m_ClMultiViewAutoDeselectOnDeath, Localize("Auto-deselect players on death"), g_Config.m_ClMultiViewAutoDeselectOnDeath, &Button))
+	{
+		g_Config.m_ClMultiViewAutoDeselectOnDeath ^= 1;
+	}
+
 	CUIRect Background, Miscellaneous;
 	MainView.VSplitMid(&Background, &Miscellaneous, 20.0f);
 
